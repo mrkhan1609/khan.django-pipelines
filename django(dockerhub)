@@ -1,0 +1,42 @@
+pipeline {
+    agent {
+        label 'bhide'
+    }
+    stages {
+        stage('code') {
+            steps {
+                echo 'this is cloning the code'
+                git branch: 'main', url: 'https://github.com/mrkhan1609/LondheShubham153-django-notes-app.git'
+            }
+        }
+        stage('build') {
+            steps {
+                echo 'this is building the code'
+                sh 'docker build -t notes-app:latest .'
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                echo 'this is pushing yhe image to docker hub'
+                withCredentials([usernamePassword('credentialsId':'dockerhubcred',
+                passwordVariable:'DockerHubPass',
+                usernameVariable:'DockerHubUser')]){
+                sh 'echo "$DockerHubPass" | docker login -u "$DockerHubUser" --password-stdin'
+                sh 'docker image tag notes-app:latest mrkhan1620/notes-app:latest'
+                sh 'docker push mrkhan1620/notes-app:latest'
+                }
+            }
+        }
+        stage('test') {
+            steps {
+                echo 'this is testing the code'
+            }
+        }
+        stage('deoloy') {
+            steps {
+                echo 'this is deploying the code'
+                sh 'docker compose up -d'
+            }
+        }
+    }
+}
